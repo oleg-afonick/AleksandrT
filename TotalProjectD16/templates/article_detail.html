@@ -1,0 +1,67 @@
+{% extends 'default.html' %}
+{% load static %}
+
+{% block title %}
+{{ article.title }}
+{% endblock title %}
+
+{% load censor_filter %}
+{% load custom_tags %}
+
+{% block content %}
+    <h3><b>Новость №{{ article.id }}</b></h3>
+    <hr>
+    <h4>{% current_time '%d %b %Y' %}</h4>
+    <hr>
+    <h5>Объявление: "{{ article.title }}"</h5>
+
+    {% if article %}
+        <table>
+            <tr>
+                <td><b>Файл</b></td>
+                <td><b>Заголовок</b></td>
+                <td><b>Превью статьи</b></td>
+                <td><b>Дата создания</b></td>
+                <td><b>Категория</b></td>
+                <td><b>Действия</b></td>
+            </tr>
+            <tr>
+                {% if article.upload %}
+                <td><img scr="{{ article.upload.url }}" width="200" height="200"></td>
+                {% else %}
+                    <td> - </td>
+                {% endif %}
+
+                <td>{{ article.title }}</td>
+                <td>{{ article.text }}</td>
+                <td>{{ article.dateCreation|date:'d M Y'}}</td>
+                <td>{{ article.get_category_display }}</td>
+
+                <td>
+                    {% if Article.author == request.user.author %}
+                    <a href="{% url 'article_update' article.id %}"><button><small>Изменить</small></button></a>
+                    {% endif %}
+                    {% if perms.testapp.delete_article %}
+                    <a href="{% url 'article_delete' article.id %}"><button><small>Удалить</small></button></a>
+                    {% endif %}
+                </td>
+
+            </tr>
+        </table>
+    {% else %}
+        <h5> На данный момент времени ни один пост не добавлен... </h5>
+        <h6> Опубликуйте свою статью ;) </h6>
+    {% endif %}
+<form action="{% url 'comment_create' article_id  %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Создать отклик">
+</form>
+{% if article.comment_set.all %}
+<h4>Все отклики:</h4>
+{% for comment in article.comment_set.all %}
+<p>{{ comment.commentUser.username }}</p>
+<p>{{ comment.text }}</p>
+{% endfor %}
+{% endif %}
+{% endblock content %}
